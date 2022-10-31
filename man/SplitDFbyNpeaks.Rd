@@ -4,7 +4,7 @@
 \alias{SplitDFbyNpeaks}
 \title{Find genes with two peaks based on repetition of the ID value}
 \usage{
-SplitDFbyNpeaks(df, ref_col)
+SplitDFbyNpeaks(df, ref_col, keep_ref = FALSE)
 }
 \arguments{
 \item{df}{Dataframe with peak and gene coordinates}

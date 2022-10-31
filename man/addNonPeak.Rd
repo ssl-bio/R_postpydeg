@@ -4,7 +4,7 @@
 \alias{addNonPeak}
 \title{Calculate highest peak read (Adapted from the addMaxNonPeakSignal function)}
 \usage{
-addNonPeak(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core = env$core)
+addNonPeak(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core = env$cores)
 }
 \arguments{
 \item{df_dup_ID_sub}{data.frame (subset) of entries with more than one peak in the gene}

@@ -29,6 +29,7 @@ drawDplot(
   plot_peak = FALSE,
   p_font = NULL,
   p_base_col = NULL,
+  ref_genome_seq = NULL,
   ref_genome = NULL
 )
 }
@@ -75,7 +76,9 @@ drawDplot(
 
 \item{p_base_col}{A vector o color values (hex) for the bases. Values have to have a base-name associated and it should take into account whether is RNA or DNA}
 
-\item{ref_genome}{A DNAStringSet object with all chromosomes for the species under study}
+\item{ref_genome_seq}{A DNAStringSet object with all chromosomes for the species under study}
+
+\item{ref_genome}{A string representing the genome on which the track's ranges are defined (e.g. "TAIR10")}
 }
 \description{
 Draws degradome profile comparing (a pair of) test samples (top panel) against (a pair of) control samples (bottom panel). Depending on the value of the 'plot_peak' parameter (boolean) it will draw a the profile around a narrow region around a peak or it will draw the profile along the transcript range. Peak is defined as the region detected as significantly different by pyDegradome and it is highlighted in yellow. Transcripts mapped on the - strand are reversed to facilitate interpretation

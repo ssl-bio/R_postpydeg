@@ -195,9 +195,10 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks, txPlot= FALSE, 
 #' @param plot_peak Boolean, true: profile is drawn around the peak region (~20nt range); false profile is  drawn in the range of the transcript
 #' @param p_font postScript option for the value of the family font
 #' @param p_base_col A vector o color values (hex) for the bases. Values have to have a base-name associated and it should take into account whether is RNA or DNA
-#' @param ref_genome A DNAStringSet object with all chromosomes for the species under study
+#' @param ref_genome_seq A DNAStringSet object with all chromosomes for the species under study
+#' @param ref_genome A string representing the genome on which the track's ranges are defined (e.g. "TAIR10")
 #' @export
-drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NULL, tx_ID = NULL, sample_list_plot, p_test=NULL, p_ctrl=NULL, p_strand = NULL, ylim = "strand", p_bigwigs, p_mart = mart, p_colors= "blue", p_col_hl = "#FF000033", ticksn = NULL,  i_factor=NULL, p_width=NULL, p_size=1, p_alpha=0.8, ucscnames=TRUE, plot_peak=FALSE, p_font=NULL, p_base_col=NULL, ref_genome=NULL) {
+drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NULL, tx_ID = NULL, sample_list_plot, p_test=NULL, p_ctrl=NULL, p_strand = NULL, ylim = "strand", p_bigwigs, p_mart = mart, p_colors= "blue", p_col_hl = "#FF000033", ticksn = NULL,  i_factor=NULL, p_width=NULL, p_size=1, p_alpha=0.8, ucscnames=TRUE, plot_peak=FALSE, p_font=NULL, p_base_col=NULL, ref_genome_seq=NULL, ref_genome=NULL) {
   # Check if names of color_cond match those of the samples
   if (!all(unlist(lapply(sample_list_plot, is.element, names(p_colors))))) {
     warning("names(p_colors) does not match with sample_list_plot. p_colors will be recycled to cover all samples")
@@ -244,23 +245,23 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
   }
   ## Test if plot around peak is chosen
   if(plot_peak) {
-    Sp_fasta_names <- names(ref_genome)
+    Sp_fasta_names <- names(ref_genome_seq)
     Sp_chr_names <- sapply(strsplit(Sp_fasta_names," "),
                            function(x) {
                              x[1]})
     i.sel <- Sp_chr_names %in% p_chr
-    ch.seq <- ref_genome[names(ref_genome)[i.sel]]
+    ch.seq <- ref_genome_seq[names(ref_genome_seq)[i.sel]]
     names(ch.seq) <- p_chr
     if (p_strand == "+") {
       sTrack <- RNASequenceTrack(#
         ch.seq,
-        genome = "TAIR10", chromosome = p_chr,
+        genome = ref_genome, chromosome = p_chr,
         fontcolor = p_base_col, cex = 0.85, noLetters = FALSE
       )
     } else {
       sTrack <- RNASequenceTrack(#
         ch.seq,
-        genome = "TAIR10", chromosome = p_chr,
+        genome = ref_genome, chromosome = p_chr,
         fontcolor = p_base_col, cex = 0.85, complement = TRUE,
         noLetters = FALSE
       )
@@ -273,7 +274,7 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
         fm <- Gviz:::.getBMFeatureMap()
         if(!plot_peak) {
             bm <- BiomartGeneRegionTrack(
-                chromosome = p_chr, genome = "TAIR10",
+                chromosome = p_chr, genome = ref_genome,
                 start = p_coors$plot_start, end = p_coors$plot_end, biomart = p_mart, size = 1.2,
                 name = "Gene model", col.title = "#808080ff", utr5 = "gray",
                 utr3 = "gray", protein_coding = "gray30", col.line = NULL,
@@ -305,7 +306,7 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     sample_track[[i.sample]] <- DataTrack(bw_strand,
                                           chromosome = p_chr,
                                           strand = p_strand,
-                                          genome = "TAIR10",
+                                          genome = ref_genome,
                                           ylim = p_ylim,
                                           col = p_colors[i.sample],
                                           col.axis = "white",
@@ -350,7 +351,7 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
       ht <- HighlightTrack(
         trackList = c(ot1, ot2, sTrack), start = peak_start, end = peak_end,
         from = p_coors$plot_start, to = p_coors$plot_end,
-        genome = "TAIR10", chromosome = p_chr,
+        genome = ref_genome, chromosome = p_chr,
         col = "transparent", inBackground = FALSE, fill = p_col_hl, alpha = 0.3
       )
     } else {
@@ -372,7 +373,6 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
           plotTracks(c(ht, AT),
                      from = p_coors$plot_start, to = p_coors$plot_end,
                      add53 = test53, add35 = test35, labelPos = "below",
-                     ## genome = "TAIR10",chromosome = p_chr,
                      transcriptAnnotation = "transcript_id", fontsize = 11
                      )
           gc()

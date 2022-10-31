@@ -4,7 +4,7 @@
 \alias{GetMaxRead}
 \title{Calculates the max read in a series of GRanges using a foreach loop}
 \usage{
-GetMaxRead(grA, grB = NULL, f_bigwig, core = 1)
+GetMaxRead(grA, f_bigwig, grB = NULL, core = 1)
 }
 \arguments{
 \item{gr}{GRanges object}

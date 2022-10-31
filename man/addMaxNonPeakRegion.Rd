@@ -4,7 +4,7 @@
 \alias{addMaxNonPeakRegion}
 \title{Calculate highest read outside peak (Adapted from the addMaxNonPeakSignal function)}
 \usage{
-addMaxNonPeakRegion(df, bigwig, i.comp, core = env$core)
+addMaxNonPeakRegion(df, bigwig, i.comp, core = env$cores)
 }
 \arguments{
 \item{df}{data.frame (subset) of entries with more than one peak in the gene}

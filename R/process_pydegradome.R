@@ -35,9 +35,6 @@ plotProfilesAllPydegResults <- function(pydeg,
     cl <- makeCluster(as.numeric(core))
     registerDoParallel(cl)
     on.exit(stopCluster(cl))
-
-                                        # foreach(i=sample_list, .export=ls(envir=parent.frame()),.packages = c("ribotools")) %do% {SaveGeneReadDrv(i)}
-                                        # foreach(i=1:nrow(pydeg), .export=ls(envir=parent.frame()),.packages = c("cid7degradomeR","Gviz","stringr","biomaRt","GenomicFeatures")) %dopar%{
     foreach(i=1:nrow(pydeg), .export= c("pydeg",
                                         "plotrange",
                                         "min_plot_width",
@@ -47,11 +44,9 @@ plotProfilesAllPydegResults <- function(pydeg,
                                         "bigwigs2",
                                         "col_cond",
                                         "col_hl"),
-
-                                        # .packages = c("cid7degradomeR","Gviz","stringr","biomaRt","GenomicFeatures")) %dopar%{
-            .packages = c("cid7degradomeR",
-                          "stringr",
-                          "GenomicFeatures"),
+            ## .packages = c("PostPyDeg",
+            ##               "stringr",
+            ##               "GenomicFeatures"),
             .errorhandling = 'remove') %dopar%{
                                         # for(i in 1:nrow(pydeg)) {
                                         # for(i.record in 1:nrow(pydeg)) {
@@ -227,8 +222,6 @@ MergeDFs <- function(dfA, dfB, ref_col) {
     dfB1 <- dplyr::select(dfB,all_of(ref_cols))
     dfA <- merge(dfA,  dfB1, by="indx_merge",
                  all.x = TRUE)[,-1]
-    
-    dfA <- dplyr::select(dfA,-indx_dup)#indx_merge
     return(dfA)
 }
 
@@ -238,14 +231,12 @@ MergeDFs <- function(dfA, dfB, ref_col) {
 #' @param bigwig reference to a bigwig file
 #' @import doParallel foreach iterators
 #' @export
-GetMaxRead <- function(grA, grB=NULL, f_bigwig, core=1) {
+GetMaxRead <- function(grA, f_bigwig, grB=NULL, core=1) {
     cl <- makeCluster(as.numeric(core))
     registerDoParallel(cl)
     on.exit(stopCluster(cl))
     
     maxread <- foreach(i=seq_along(grA),
-                       .export=c("grA","grB","f_bigwig"),
-                       ## .packages = c("cid7degradomeR","GenomicRanges"),
                        .packages = c("GenomicRanges"),
                        .combine = "c",
                        .inorder = TRUE) %dopar% {
@@ -263,8 +254,8 @@ GetMaxRead <- function(grA, grB=NULL, f_bigwig, core=1) {
                          }
                          maxread
                        }
-    return(maxread)
-  }
+return(maxread)
+}
 
 #'Calculate highest peak read (Adapted from the addMaxNonPeakSignal function)
 #' @name MaxPeakBigWig
@@ -287,7 +278,7 @@ MaxPeakBigWig <- function(df, i.comp, core=1) {
     }
     bigwig <- dg_bigwig_all[[sample_name]]
     
-    peak_max <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$core)
+    peak_max <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$cores)
     return(peak_max)
 }
 
@@ -330,7 +321,7 @@ addMaxNonPeakSignal <- function(i.df, i.comp, core=1) {
     sample_name <- SampleName(i.comp)
     n_bigwig <- dg_bigwig_all[[sample_name]]
 
-    max_non_peak <-  GetMaxRead(grA=gr_f, grB=gr_r, f_bigwig=n_bigwig, core=env$core)
+    max_non_peak <-  GetMaxRead(grA=gr_f, grB=gr_r, f_bigwig=n_bigwig, core=env$cores)
     
     df_w_gene$max_np_gene <- as.numeric(max_non_peak)
     if(nrow(df_wo_gene)>0) {
@@ -398,7 +389,7 @@ GetNonPeakCoors <- function(df) {
 #' @param i.comp Name of comparison pair (divided into test and ctrl)
 #' @import doParallel foreach
 #' @export
-addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$core) {
+addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$cores) {
                                         #Vector of columns
     i.cols  <- c("ID",
                  "chr",
@@ -483,7 +474,7 @@ addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$core)
     )
     
     cat("\t\tCalculating Non Peak Max...\n")
-    df.ID2$max_non_peak_region <- GetMaxRead(grA=gr,f_bigwig=bigwig, core=env$core)
+    df.ID2$max_non_peak_region <- GetMaxRead(grA=gr,f_bigwig=bigwig, core=env$cores)
     cat("\t\tFinished Non Peak Max calculation\n")
     ##==================================================
     ##---------------------------------------------
@@ -544,7 +535,7 @@ addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$core)
   )
   
   cat("\t\tCalculating Non Peak Max...\n")
-  tmp_df_np_coor$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$core)
+  tmp_df_np_coor$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$cores)
   cat("\t\tFinished Non Peak Max calculation\n")
   ##==================================================
   ##---------------------------------------------
@@ -557,7 +548,7 @@ addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$core)
                                          sep=""))
   tryCatch({
     ##fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-    cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+    cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
   },error=function(e) {
     stopCluster(cl)
     message("Writing peaks failed")
@@ -602,7 +593,7 @@ addNonPeak <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp, core=env$core)
 #' @param i.comp Name of comparison pair (divided into test and ctrl)
 #' @import doParallel foreach
 #' @export
-addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
+addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$cores) {
                                         #Columns for index & comparison
     i.cols  <- c("ID",
                  "chr",
@@ -655,7 +646,7 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
             
             cat("\t\tCalculating Non Peak Max...\n")
             
-            df.ID2$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$core)
+            df.ID2$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$cores)
            
             cat("\t\tFinished Non Peak Max calculation\n")
             ##==================================================
@@ -678,7 +669,7 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
                 fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+                cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
             },error=function(e) {
                 stopCluster(cl)
                 message("Writing peaks failed")
@@ -722,7 +713,7 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
         
         cat("\t\tCalculating Non Peak Max...\n")
        
-        df$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$core)
+        df$max_non_peak_region <- GetMaxRead(grA=gr, f_bigwig=bigwig, core=env$cores)
         
         cat("\t\tFinished Non Peak Max calculation\n")
         ##==================================================
@@ -737,7 +728,7 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
                                    sep=""))
         tryCatch({
             fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-            cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+            cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
         },error=function(e) {
             stopCluster(cl)
             message("Writing peaks failed")
@@ -764,13 +755,12 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core=env$core) {
      on.exit(stopCluster(cl))
                                         #Loop over all the IDS 
      pydeg_np_gene <- foreach(j=seq_along(dup_ID),
-                              .export=c("dup_ID", "pydeg_np_region"),
+                              ## .export=c("dup_ID", "pydeg_np_region"),
                               .packages=c("data.table"),
                               .combine = "rbind",
                               .inorder = TRUE) %dopar% {
                                         #single ID
                                   i.id <- dup_ID[j]
-
                                         #subset of regions for i.id
                                   tmp_pydeg_np_gene <- pydeg_np_region[pydeg_np_region$ID==i.id,]
                                         #calculate absolute max_non_peak
@@ -929,7 +919,7 @@ addNonPeakSingle <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp) {
                 cat("\t\tCalculating Non Peak Max...\n")
                 df.ID2$max_non_peak_region <- GetMaxRead(grA=gr,
                                                          f_bigwig=bigwig,
-                                                         core=env$core)
+                                                         core=env$cores)
                 cat("\t\tFinished Non Peak Max calculation\n")
                 ##==================================================
                 ##---------------------------------------------
@@ -949,7 +939,7 @@ addNonPeakSingle <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp) {
                                         #remove indx column
                     df.ID2 <- dplyr::select(df.ID2,-indx)
                     fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-                    cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+                    cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
                 },error=function(e) {
                     
                     stopCluster(cl)
@@ -999,7 +989,7 @@ addNonPeakSingle <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp) {
 
             cat("\t\tCalculating Non Peak Max...\n")
             tmp_df_np_coor$max_non_peak_region <- GetMaxRead(#
-                grA=gr, f_bigwig=bigwig, core=env$core)
+                grA=gr, f_bigwig=bigwig, core=env$cores)
             cat("\t\tFinished Non Peak Max calculation\n")
             ##==================================================
             ##---------------------------------------------
@@ -1013,7 +1003,7 @@ addNonPeakSingle <- function(df_dup_ID_sub, df_dup_sub, bigwig, i.comp) {
             tryCatch({
                 ## i.reads <- apply(i.reads,2,as.character)
                 fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+                cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
             },error=function(e) {
                 stopCluster(cl)
                 message("Writing peaks failed")
@@ -1085,7 +1075,7 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx) {
                                         #Add max_np_gene to the missing entries
         cat("\t\tAdd max_np_gene to missing entries...\n")
         if(!is.null(df.ID2) && nrow(df.ID2) > 0) {
-            df.ID2 <- addMaxNonPeakSignal(df.ID2, i.comp, core=env$core)
+            df.ID2 <- addMaxNonPeakSignal(df.ID2, i.comp, core=env$cores)
             ##---------------------------------------------
                                         #Append the new entries
                                         #to the reference file
@@ -1103,7 +1093,7 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx) {
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
                 fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+                cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
             },error=function(e) {
                 stopCluster(cl)
                 message("Writing peaks failed")
@@ -1133,7 +1123,7 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx) {
     } else {
         cat("\tNo reference was found.\n")
         cat("\t\tCalculating max_np_gene...\n")
-        df <- addMaxNonPeakSignal(df,i.comp,core = env$core)
+        df <- addMaxNonPeakSignal(df,i.comp,core = env$cores)
         ##---------------------------------------------
                                         #Write data to ref file
         i.reads <- dplyr::select(df,
@@ -1146,7 +1136,7 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx) {
         tryCatch({
             ## i.reads <- apply(i.reads,2,as.character)
             fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-            cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+            cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
         },error=function(e) {
             stopCluster(cl)
             message("Writing peaks failed")
@@ -1167,8 +1157,8 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx) {
 #' @export
 checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
                          idir=pydeg_reads_dir) {
-    i.comp <<- i.comp
-    df <<- df
+    ## i.comp <<- i.comp
+    ## df <<- df
     peaks_ref <- file.path(idir,
                            paste0("MaxPeak_reads-",
                                   i.comp))
@@ -1191,7 +1181,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
         cat("\t\tAdd max_peak to missing entries...\n")
         if (!is.null(dfs.ID$df_nonmatch) && nrow(dfs.ID$df_nonmatch) > 0) {
             df.ID2 <- unique(dfs.ID$df_nonmatch)
-            df.ID2$max_peak <- MaxPeakBigWig(df.ID2, i.comp,core = env$core)
+            df.ID2$max_peak <- MaxPeakBigWig(df.ID2, i.comp, core = env$cores)
             ##---------------------------------------------
                                         #Append the new entries
                                         #to the reference file
@@ -1209,7 +1199,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
                 fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+                cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
             },error=function(e) {
                 stopCluster(cl)
                 message("Writing peaks failed")
@@ -1227,7 +1217,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
         df.NonID <- df[!grepl("^AT",df$ID),]#is.na(df$ID)
         if(nrow(df.NonID) > 0) {
             df.NonID$max_peak <- NA
-        }else {
+        } else {
             df.NonID <- NULL
         }
 
@@ -1238,7 +1228,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
     } else {
         cat("\tNo reference was found.\n")
         cat("\t\tCalculating max_peak...\n")
-        df$max_peak <- MaxPeakBigWig(df, i.comp, core = env$core)
+        df$max_peak <- MaxPeakBigWig(df, i.comp, core = env$cores)
         ##---------------------------------------------
                                         #Write data to ref file
         i.reads <- dplyr::select(df,
@@ -1251,7 +1241,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
         tryCatch({
             ## i.reads <- apply(i.reads,2,as.character)
             fwrite(i.reads,peaks_ref,sep="\t",row.names=FALSE)
-            cat(paste0("\t\t\tWrote ",peaks_ref,"\n"))
+            cat(paste0("\t\t\tWrote ", basename(peaks_ref),"\n"))
         },error=function(e) {
             stopCluster(cl)
             message("Writing peaks failed")
@@ -1269,7 +1259,7 @@ checkPeakRef <- function(df,i.comp,i.cols=cols.indx,
 #' @param df Dataframe with peak and gene coordinates
 #' @param ref_col Column used to judge duplicates
 #' @export
-SplitDFbyNpeaks <- function(df,ref_col) {
+SplitDFbyNpeaks <- function(df,ref_col,keep_ref=FALSE) {
                                         #get table of duplicated values
   n_occur_id <- data.frame(table(df[[ref_col]]))
   colnames(n_occur_id) <- c("Var1","Freq")
@@ -1278,6 +1268,11 @@ SplitDFbyNpeaks <- function(df,ref_col) {
 
   results <- list(df_dup=df[i.log.dup,],
                   df_uniq=df[!i.log.dup,])
+    if (!keep_ref) {
+        results <- lapply(results, function(x) {
+            dplyr::select(x,-ref_col)
+        })
+    }
   return(results)
 }
 
@@ -1289,14 +1284,14 @@ SplitDFbyNpeaks <- function(df,ref_col) {
 #' @param f_input_dir directory of the pooled file
 #' @param f_core Number of threads for the nested funtion (GetMaxread)
 #' @export
-maxPtest <-function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core=1) {
-    
+maxPtest <- function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core=1) {
+    setDF(f_df)
     f_cols <- colnames(f_df)
     max.peak.l <- list()
     for (i in seq_along(f_pairs)) {
         
         f_sample <- f_pairs[i]
-        bigwig <- f_bigwigs[[f_sample]]
+        f_bigwig <- f_bigwigs[[f_sample]]
         
         reads_ref <- file.path(f_input_dir,
                                paste0("Peak_reads_test-",
@@ -1319,7 +1314,7 @@ maxPtest <-function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core=1) {
                               ranges=IRanges(start=df2$peak_start,
                                              end=df2$peak_stop),
                               strand=df2$strand)
-                df2$max_peak <- GetMaxRead(grA = f_gr, f_bigwig = bigwig, core=f_core)
+                df2$max_peak <- GetMaxRead(grA = f_gr, f_bigwig = f_bigwig, core=f_core)
                
                 cat("\t\tFinished peak signal calculation on test sample\n")
                 f_reads2 <- df2
@@ -1327,7 +1322,7 @@ maxPtest <-function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core=1) {
                 f_reads <- unique(f_reads)
                 df2 <- dplyr::select(df2,-indx)
                 fwrite(f_reads,reads_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",reads_ref,"\n"))
+                cat(paste0("\t\t\tWrote ",basename(reads_ref),"\n"))
             } else {
                 df2 <- NULL
             }
@@ -1347,14 +1342,14 @@ maxPtest <-function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core=1) {
                           ranges=IRanges(start=f_df$peak_start,
                                          end=f_df$peak_stop),
                           strand=f_df$strand)
-            f_df$max_peak <- GetMaxRead(grA = f_gr, f_bigwig = bigwig, core=f_core)
+            f_df$max_peak <- GetMaxRead(grA = f_gr, f_bigwig = f_bigwig, core=f_core)
             
             cat("\t\tFinished peak signal calculation on test sample\n")
             f_reads <- dplyr::select(f_df, all_of(c(f_cols,"max_peak","indx")))
             f_reads <- unique(f_reads)
             
             fwrite(f_reads,reads_ref,sep="\t",row.names=FALSE)
-            cat(paste0("\t\t\tWrote ",reads_ref,"\n"))
+            cat(paste0("\t\t\tWrote ",basename(reads_ref),"\n"))
             
             df.out <- dplyr::select(f_df,-indx)
             df.out$sample <- f_sample
@@ -1382,7 +1377,7 @@ maxTxctrl <- function(tx_id, f_bigwigs, f_pairs, f_gr_tr, f_input_dir, f_core=1)
     i.list <- list()
     for (i in seq_along(f_pairs)) {
         f_sample <- f_pairs[i]
-        bigwig <- f_bigwigs[[f_sample]]
+        f_bigwig <- f_bigwigs[[f_sample]]
         
                                         #create max read df
         pydeg_df <- data.frame(tx_name=tx_id, #1
@@ -1408,7 +1403,7 @@ maxTxctrl <- function(tx_id, f_bigwigs, f_pairs, f_gr_tr, f_input_dir, f_core=1)
             cat("\t\tAdd max_read_tx to missing entries...\n")
             if(!is.null(pydeg_df2) && nrow(pydeg_df2) > 0) {
                 f_gr  <-  f_gr_tr[!i.wread,]
-                pydeg_df2$max_read_tx <- GetMaxRead(grA = f_gr, f_bigwig = bigwig, core=f_core)
+                pydeg_df2$max_read_tx <- GetMaxRead(grA = f_gr, f_bigwig = f_bigwig, core=f_core)
 
                 cat("\t\tFinished max_read_tx calculation on control sample\n")
                 f_reads2 <- pydeg_df2
@@ -1416,7 +1411,7 @@ maxTxctrl <- function(tx_id, f_bigwigs, f_pairs, f_gr_tr, f_input_dir, f_core=1)
                 f_reads <- unique(f_reads)
                 pydeg_df2 <- dplyr::select(pydeg_df2,-indx)
                 fwrite(f_reads,reads_ref,sep="\t",row.names=FALSE)
-                cat(paste0("\t\t\tWrote ",reads_ref,"\n"))
+                cat(paste0("\t\t\tWrote ",basename(reads_ref),"\n"))
             } else {
                 pydeg_df2 <- NULL
             }
@@ -1430,14 +1425,14 @@ maxTxctrl <- function(tx_id, f_bigwigs, f_pairs, f_gr_tr, f_input_dir, f_core=1)
             cat("\tNo reference was found.\n")
             cat("\t\tCalculating max_read_tx on control sample...\n")
             f_gr <- f_gr_tr
-            pydeg_df$max_read_tx <- GetMaxRead(grA = f_gr, f_bigwig = bigwig, core=env$core)
+            pydeg_df$max_read_tx <- GetMaxRead(grA = f_gr, f_bigwig = f_bigwig, core=env$cores)
             
             cat("\t\tFinished max_read_tx calculation on control sample\n")
             f_reads <- pydeg_df
             f_reads <- unique(f_reads)
             
             fwrite(f_reads,reads_ref,sep="\t",row.names=FALSE)
-            cat(paste0("\t\t\tWrote ",reads_ref,"\n"))
+            cat(paste0("\t\t\tWrote ",basename(reads_ref),"\n"))
             
             pydeg_df <- dplyr::select(pydeg_df,-indx)
             pydeg_df$sample <- f_sample
