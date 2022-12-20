@@ -4,7 +4,7 @@
 #' @param chr Char of chromosome name
 #' @param x_start Numeric. Coordinate of left end of the plot range.
 #' @param x_end Numeric. Coordinate of right end of the plot range.
-#' @import GenomicRanges
+#' @importFrom GenomicRanges GRanges IRanges subsetByOverlaps
 #' @export
 maxCoverageBigWig <- function(bigwig, chr, x_start, x_end) {
   # GRanges for the target region
@@ -34,7 +34,8 @@ maxCoverageBigWig <- function(bigwig, chr, x_start, x_end) {
 #' @param x_end Numeric. Coordinate of right end of the plot range.
 #' @export
 maxCoverageBigWigList <- function(bigwigs, chr, x_start, x_end) {
-  max_min <- lapply(bigwigs, maxCoverageBigWig, chr = chr, x_start = x_start, x_end = x_end)
+    max_min <- lapply(bigwigs, maxCoverageBigWig, chr = chr,
+                      x_start = x_start, x_end = x_end)
   max_min <- do.call(rbind, max_min)
   max_cov <- max(max_min[, "max"])
   min_cov <- min(max_min[, "min"])
@@ -48,16 +49,17 @@ maxCoverageBigWigList <- function(bigwigs, chr, x_start, x_end) {
 #' @param sep2 A string to separate the two halfs before exporting
 #' @param parenthesis A pair of symbols to group the half of vector elements
 #' @export
-mergeVector <- function(ivec,sep1=" vs ",sep2=" AND \n", parenthesis=c("(",")"), single=FALSE) {
-    i.sel <-rep(c(TRUE,FALSE),each=length(ivec)/2)
+mergeVector <- function(ivec,sep1 = " vs ", sep2 = " AND \n",
+                        parenthesis=c("(", ")"), single = FALSE) {
+    i.sel <-rep(c(TRUE, FALSE),each = length(ivec) / 2)
     part1 <- paste(names(ivec)[i.sel],collapse = sep1)
     if (single) {
-        part1 <- gsub(" \\[[0-9]\\]","",part1)
+        part1 <- gsub(" \\[[0-9]\\]", "", part1)
         imerged <- part1
     } else {
-        part2 <- paste(names(ivec)[!i.sel],collapse = sep1)
-        imerged <- paste(paste0(parenthesis[1],part1,parenthesis[2]),
-                         paste0(parenthesis[1],part2,parenthesis[2]),
+        part2 <- paste(names(ivec)[!i.sel], collapse = sep1)
+        imerged <- paste(paste0(parenthesis[1], part1, parenthesis[2]),
+                         paste0(parenthesis[1], part2, parenthesis[2]),
                          sep = sep2)
     }
     return(imerged)
@@ -69,33 +71,33 @@ mergeVector <- function(ivec,sep1=" vs ",sep2=" AND \n", parenthesis=c("(",")"),
 #' @export
 invertVector <- function(x) {
   inames <- names(x)
-  x <- x[rev(seq_along(x))]*-1
+  x <- x[rev(seq_along(x))] * -1
   names(x) <- inames
   return(x)
 }
 
-#' Invert the score values of a list of a GenomicRange object 
+#' Invert the score values of a list of a GenomicRange object
 #' @name invertGRscores
 #' @param bwl A list of GenomicRange-objects with a score metadata
 #' @export
 invertGRscores <- function(bwl) {
-  for(i in seq_along(bwl)) {
+  for (i in seq_along(bwl)) {
     ibw <- bwl[[i]]
-    score(ibw) <- score(ibw)*-1
+    score(ibw) <- score(ibw) * -1
     bwl[[i]] <- ibw
   }
   return(bwl)
 }
 
-#' Returns: Start and end coordinates for the plot 
+#' Returns: Start and end coordinates for the plot
 #' @param i_start ranscript start coordinates
 #' @param i_end Transcript end coordinates
 #' @param i_factor proportion of the transcript range that will be added as offset
 #' @param p_width width of the plot in basepairs
 #' @name GetPlotCoors
 #' @export
-GetPlotCoors <- function(i_start, i_end, i_factor=NULL, p_width=NULL) {
-  if(i_start<i_end) {
+GetPlotCoors <- function(i_start, i_end, i_factor = NULL, p_width = NULL) {
+  if (i_start < i_end) {
     p_start <- i_start
     p_end <- i_end
   } else {
@@ -103,12 +105,12 @@ GetPlotCoors <- function(i_start, i_end, i_factor=NULL, p_width=NULL) {
     p_end <- i_start
   }
   p_range <- p_end - p_start
- 
-  if(!is.null(p_width)) {
-    p_offset <- ceiling((p_width-p_range)/2)
+
+  if (!is.null(p_width)) {
+    p_offset <- ceiling((p_width - p_range) / 2)
   } else {
-    p_offset <- ceiling((p_range*i_factor)/10)*10
-    p_width <- ceiling(p_range+(p_offset*2))
+    p_offset <- ceiling((p_range * i_factor) / 10) * 10
+    p_width <- ceiling(p_range + (p_offset * 2))
   }
 
   p_start <- i_start-p_offset
@@ -125,11 +127,12 @@ GetPlotCoors <- function(i_start, i_end, i_factor=NULL, p_width=NULL) {
 #' @param p_width width of the plot in basepairs
 #' @name GetPlotMarks
 #' @export
-GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks, txPlot= FALSE, min_ticks=4, max_ticks=6) {
+GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks,
+                         txPlot =  FALSE, min_ticks = 4, max_ticks = 6) {
 
     p_width <- abs(p_end - p_start)
-    
-    if(p_width<50) {
+
+    if (p_width < 50) {
         round_f <- 10
         idiv <- 1
     } else {
@@ -137,37 +140,36 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks, txPlot= FALSE, 
         idiv <- 10
     }
 
-    t_start <- round_f*ceiling(p_start/round_f)
-    t_end <- round_f*floor(p_end/round_f)
+    t_start <- round_f * ceiling(p_start / round_f)
+    t_end <- round_f * floor(p_end / round_f)
 
-    
-    max_ticks <- ceiling(p_width/10)
+
+    max_ticks <- ceiling(p_width / 10)
     if (max_ticks < iticks) { #Could it cause an infinite loop?
         iticks <- max_ticks
     }
     p_step <- floor((t_end - t_start)/(idiv*iticks))*idiv
-    ## cat("Starting Number of tickmarks =",iticks,"\nSpace between marks",p_step,"\n")
     tick_coors <- seq(t_start, t_end, p_step)
-    if(txPlot) {
+    if (txPlot) {
         i.sel <- tick_coors >= i_start & tick_coors <= i_end
         tick_coors <- tick_coors[i.sel]
         if (length(tick_coors) < min_ticks) {
             while (length(tick_coors) < min_ticks) {
                 iticks <- iticks + 1
-                tick_coors <- GetPlotMarks(i_start, i_end, t_start, t_end, iticks, txPlot= TRUE)
+                tick_coors <- GetPlotMarks(i_start, i_end,
+                                           t_start, t_end, iticks,
+                                           txPlot =  TRUE)
             }
-            ## cat("Final Number of tickmarks =",iticks,"\nSpace between marks",p_step,"\n")
-            ## return(tick_coors)
         } else if (length(tick_coors) > max_ticks) {
             while (length(tick_coors) > max_ticks) {
                 iticks <- iticks - 1
-                tick_coors <- GetPlotMarks(i_start, i_end, t_start, t_end, iticks, txPlot= TRUE)
+                tick_coors <- GetPlotMarks(i_start, i_end,
+                                           t_start, t_end, iticks,
+                                           txPlot =  TRUE)
             }
-            ## cat("Final Number of tickmarks =",iticks,"\nSpace between marks",p_step,"\n")
-            ## return(tick_coors)
-        } 
+        }
     }
-    ## cat("Final Number of tickmarks =",iticks,"\nSpace between marks",p_step,"\n")
+    ## cat("Final Number of tickmarks  = ",iticks,"\nSpace between marks",p_step,"\n")
     return(tick_coors)
 }
 
@@ -180,8 +182,8 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks, txPlot= FALSE, 
 #' @param peak_end Numeric vector.Coordinate(s) of right end of the region to be highlighted. If NULL, nothing to be highlinghted (default).
 #' @param tx_ID Gene identification ID, such as ensembl
 #' @param sample_list_plot Character vector of sampel names to be plotted. Should be a part of `names(bigwigs)`.
-#' @param p_test 
-#' @param p_ctrl 
+#' @param p_test
+#' @param p_ctrl
 #' @param ylim Character vector, "all" or "strand". Both will set the scale of all the panels to be the same; the former will consider both strands while the latter will be strand specific.  Null for autoscale (default).
 #' @param p_bigwigs List of bigwig records. BigWig files should be loaded by `rtracklayer::import`.
 #' @param p_mart a biomart object from which to retrieve the gene information
@@ -198,7 +200,17 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks, txPlot= FALSE, 
 #' @param ref_genome_seq A DNAStringSet object with all chromosomes for the species under study
 #' @param ref_genome A string representing the genome on which the track's ranges are defined (e.g. "TAIR10")
 #' @export
-drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NULL, tx_ID = NULL, sample_list_plot, p_test=NULL, p_ctrl=NULL, p_strand = NULL, ylim = "strand", p_bigwigs, p_mart = mart, p_colors= "blue", p_col_hl = "#FF000033", ticksn = NULL,  i_factor=NULL, p_width=NULL, p_size=1, p_alpha=0.8, ucscnames=TRUE, plot_peak=FALSE, p_font=NULL, p_base_col=NULL, ref_genome_seq=NULL, ref_genome=NULL) {
+#' @importFrom Gviz BiomartGeneRegionTrack DataTrack displayPars GenomeAxisTrack
+#' @importFrom Gviz HighlightTrack OverlayTrack plotTracks RNASequenceTrack
+drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL,
+                      peak_end = NULL, tx_ID = NULL, sample_list_plot,
+                      p_test = NULL, p_ctrl = NULL, p_strand = NULL,
+                      ylim = "strand", p_bigwigs, p_mart = mart,
+                      p_colors = "blue", p_col_hl = "#FF000033",
+                      ticksn = NULL,  i_factor = NULL, p_width = NULL,
+                      p_size = 1, p_alpha = 0.8, ucscnames = TRUE,
+                      plot_peak = FALSE, p_font = NULL, p_base_col = NULL,
+                      ref_genome_seq = NULL, ref_genome = NULL) {
   # Check if names of color_cond match those of the samples
   if (!all(unlist(lapply(sample_list_plot, is.element, names(p_colors))))) {
     warning("names(p_colors) does not match with sample_list_plot. p_colors will be recycled to cover all samples")
@@ -208,19 +220,19 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
   }
 
   ##Use arbitrary names
-    if(!ucscnames) {
+    if (!ucscnames) {
         options(ucscChromosomeNames=FALSE)
     }
-    if(plot_peak) {
+    if (plot_peak) {
         txPlot <- FALSE
     } else {
         txPlot <- TRUE
     }
-    
+
 
     p_coors <- GetPlotCoors(tx_start, tx_end, i_factor, p_width)
     ticks_coors <- GetPlotMarks(i_start = tx_start, i_end = tx_end, p_start = p_coors$plot_start, p_end = p_coors$plot_end, iticks = ticksn, txPlot = txPlot)
-    
+
   ## Calculate limits; If by p_strand,
   if (ylim == "all") {
     p_ylim <- maxCoverageBigWigList(p_bigwigs, p_chr,
@@ -229,7 +241,7 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     p_ylim <- maxCoverageBigWigList(p_bigwigs, p_chr,
                                   p_coors$plot_start, p_coors$plot_end)
     if (p_strand == "+") {
-        p_ylim[1] <- 0 #Set min value to 0 
+        p_ylim[1] <- 0 #Set min value to 0
         test53 <- TRUE
         test35 <- FALSE
         strandD <- FALSE
@@ -244,9 +256,9 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     }
   }
   ## Test if plot around peak is chosen
-  if(plot_peak) {
+  if (plot_peak) {
     Sp_fasta_names <- names(ref_genome_seq)
-    Sp_chr_names <- sapply(strsplit(Sp_fasta_names," "),
+    Sp_chr_names <- sapply(strsplit(Sp_fasta_names, " "),
                            function(x) {
                              x[1]})
     i.sel <- Sp_chr_names %in% p_chr
@@ -268,11 +280,11 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     }
     displayPars(sTrack) <- list(fontfamily = p_font, fontfamily.title = p_font)
   }
-  
+
     tryCatch(
     {
         fm <- Gviz:::.getBMFeatureMap()
-        if(!plot_peak) {
+        if (!plot_peak) {
             bm <- BiomartGeneRegionTrack(
                 chromosome = p_chr, genome = ref_genome,
                 start = p_coors$plot_start, end = p_coors$plot_end, biomart = p_mart, size = 1.2,
@@ -285,9 +297,9 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     },
     error = function(e) {
       message(paste0(
-        "plotBigWig failed to get annotation through biomaRt for: chr=",
-        p_chr, " x_start=", x_start, " x_end=", x_end, " peak_start=",
-        peak_start, " peak_end=", peak_end
+        "plotBigWig failed to get annotation through biomaRt for: chr = ",
+        p_chr, " x_start = ", tx_start, " x_end = ", tx_end, " peak_start = ",
+        peak_start, " peak_end = ", peak_end
       ))
       message(e)
       ## bm <- NULL
@@ -301,8 +313,8 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     ## filter bigwig by strand
     sel.strand <- strand(bw) == p_strand
     bw_strand <- bw[sel.strand, ]
-    i.lab <- gsub(" \\[[0-9]\\]","",sample_list_plot[i.counter])
-    i.lab <- gsub("At ","",i.lab)
+    i.lab <- gsub(" \\[[0-9]\\]", "", sample_list_plot[i.counter])
+    i.lab <- gsub("At ", "", i.lab)
     sample_track[[i.sample]] <- DataTrack(bw_strand,
                                           chromosome = p_chr,
                                           strand = p_strand,
@@ -310,17 +322,13 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
                                           ylim = p_ylim,
                                           col = p_colors[i.sample],
                                           col.axis = "white",
-                                          ## background.title = "gray30",
-                                          background.panel = "#e0e0e07f", # "#e0e0e0ff",
-                                          ## col.grid = "white",
+                                          background.panel = "#e0e0e07f",
                                           name = i.lab,
                                           fontsize = 6,
                                         # symbols
                                           cex = p_size,
-                                          ## cex.axis = 0.7,
-                                          ## cex.title = 0.8,
-                                          alpha=p_alpha,
-                                          alpha.title=1,
+                                          alpha = p_alpha,
+                                          alpha.title = 1,
                                           type = c("p", "g"),
                                           legend = TRUE
                                           )
@@ -328,26 +336,24 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
 
   ot1 <- OverlayTrack(sample_track[sample_list_plot %in% p_test],
                       background.title = "gray30",
-                      ## background.panel = "#e0e0e0ff",
                       col.grid = "white",
                       ## fontsize = 14 or 6,
                       cex.axis = 0.7,
                       ## cex.title = 0.8 or 0.7,
                       alpha = 0.75
                       )
-  
+
   ot2 <- OverlayTrack(sample_track[sample_list_plot %in% p_ctrl],
                       background.title = "gray30",
-                      ## background.panel = "#e0e0e0ff",
                       col.grid = "white",
                       ## fontsize = 14 or 6,
                       cex.axis = 0.7,
                       ## cex.title = 0.8 or 0.7,
                       alpha = 0.75
                       )
-  
+
   if (is.numeric(peak_start) && is.numeric(peak_end)) {
-    if(plot_peak) {
+    if (plot_peak) {
       ht <- HighlightTrack(
         trackList = c(ot1, ot2, sTrack), start = peak_start, end = peak_end,
         from = p_coors$plot_start, to = p_coors$plot_end,
@@ -369,7 +375,7 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
   tryCatch(
     {
       if (!is.null(ht)) {
-        if(plot_peak) {
+        if (plot_peak) {
           plotTracks(c(ht, AT),
                      from = p_coors$plot_start, to = p_coors$plot_end,
                      add53 = test53, add35 = test35, labelPos = "below",
@@ -382,27 +388,27 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
                      to = p_coors$plot_end, add53 = test53,
                      add35 = test35, labelPos = "below",
                      transcriptAnnotation = "transcript_id",
-                     ticksAt = ticks_coors, #exponent = p_exp,
-                     fontsize = 14, reverseStrand=strandD)
+                     ticksAt = ticks_coors,
+                     fontsize = 14, reverseStrand = strandD)
           gc()
-          
+
         }
       } else {
-        if(plot_peak) {
+        if (plot_peak) {
         plotTracks(c(ht, sTrack, AT),
-          from = x_start, to = x_end,
+          from = tx_start, to = tx_end,
           add53 = test53, add35 = test35, labelPos = "below",
           transcriptAnnotation = "transcript_id", fontsize = 11
           )
         gc()
         } else {
           plotTracks(c(ht, bm, AT),
-                       from = p_coors$plot_start-500,
-                       to = p_coors$plot_end+500,
+                       from = p_coors$plot_start - 500,
+                       to = p_coors$plot_end + 500,
                        add53 = test53, add35 = test35, labelPos = "below",
                        transcriptAnnotation = "transcript_id",
                        ticksAt = ticks_coors, exponent = p_exp,
-                       fontsize = 14, reverseStrand=strandD
+                       fontsize = 14, reverseStrand = strandD
                      )
           gc()
         }
@@ -410,9 +416,9 @@ drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL, peak_end = NUL
     },
     error = function(e) {
       message(paste0(
-        "plotBigWig failed to plot profile for: chr=",
-        p_chr, " x_start=", x_start, " x_end=", x_end, " peak_start=",
-        peak_start, " peak_end=", peak_end
+        "plotBigWig failed to plot profile for: chr = ",
+        p_chr, " x_start = ", tx_start, " x_end = ", tx_end, " peak_start = ",
+        peak_start, " peak_end = ", peak_end
       ))
       message(e)
     }

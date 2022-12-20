@@ -2,15 +2,19 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{GetMaxRead}
 \alias{GetMaxRead}
-\title{Calculates the max read in a series of GRanges using a foreach loop}
+\title{Calculates the highest read value from a series of GRanges using a foreach loop}
 \usage{
 GetMaxRead(grA, f_bigwig, grB = NULL, core = 1)
 }
 \arguments{
-\item{gr}{GRanges object}
+\item{f_bigwig}{reference to a bigwig file}
 
-\item{bigwig}{reference to a bigwig file}
+\item{core}{Number of threads for the parallel process}
+
+\item{gr_A}{main GRanges object}
+
+\item{gr_B}{secondary GRanges object}
 }
 \description{
-Calculates the max read in a series of GRanges using a foreach loop
+Calculates the highest read value from a series of GRanges using a foreach loop
 }

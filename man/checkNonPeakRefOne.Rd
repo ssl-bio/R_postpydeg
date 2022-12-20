@@ -4,7 +4,7 @@
 \alias{checkNonPeakRefOne}
 \title{Calculate highest read outside peak (peak = 1)}
 \usage{
-checkNonPeakRefOne(df, i.comp, cols.indx)
+checkNonPeakRefOne(df, i.comp, cols.indx, idir = pydeg_reads_dir)
 }
 \arguments{
 \item{i.comp}{Name of comparison pair (divided into test and ctrl)}

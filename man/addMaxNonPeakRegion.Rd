@@ -2,19 +2,21 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{addMaxNonPeakRegion}
 \alias{addMaxNonPeakRegion}
-\title{Calculate highest read outside peak (Adapted from the addMaxNonPeakSignal function)}
+\title{Takes a data frame with non peak coordinates and
+returns the highest read per region}
 \usage{
 addMaxNonPeakRegion(df, bigwig, i.comp, core = env$cores)
 }
 \arguments{
-\item{df}{data.frame (subset) of entries with more than one peak in the gene}
+\item{df}{A data.frame with non peak coordinates of entries with more than one peak in the gene}
 
 \item{bigwig}{Filename of the bigwig file}
 
 \item{i.comp}{Name of comparison pair (divided into test and ctrl)}
 
-\item{core}{Number of cores available}
+\item{core}{Number of threads for the parallel process}
 }
 \description{
-Calculate highest read outside peak (Adapted from the addMaxNonPeakSignal function)
+Takes a data frame with non peak coordinates and
+returns the highest read per region
 }

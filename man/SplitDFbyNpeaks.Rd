@@ -10,6 +10,8 @@ SplitDFbyNpeaks(df, ref_col, keep_ref = FALSE)
 \item{df}{Dataframe with peak and gene coordinates}
 
 \item{ref_col}{Column used to judge duplicates}
+
+\item{keep_ref}{Boolean for keeping or removing 'ref_col'}
 }
 \description{
 Find genes with two peaks based on repetition of the ID value

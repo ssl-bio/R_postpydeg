@@ -2,17 +2,19 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{addMaxNonPeakSignal}
 \alias{addMaxNonPeakSignal}
-\title{Add maxNonPeakRegion to pyDegradome result data.frame}
+\title{Returns the highest read outside the peak region.
+Considers regions upstream and downstream of the peak}
 \usage{
 addMaxNonPeakSignal(i.df, i.comp, core = 1)
 }
 \arguments{
-\item{core}{Number of cores available}
+\item{i.df}{data frame with PyDegradome results}
 
-\item{x}{data.frame of pyDegradome result}
+\item{i.comp}{Name of comparison pair (divided into test and ctrl)}
 
-\item{ann}{data.frame of GFF annotation}
+\item{core}{Number of threads for the parallel process}
 }
 \description{
-Add maxNonPeakRegion to pyDegradome result data.frame
+Returns the highest read outside the peak region.
+Considers regions upstream and downstream of the peak
 }

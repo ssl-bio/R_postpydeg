@@ -2,17 +2,17 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{MaxPeakBigWig}
 \alias{MaxPeakBigWig}
-\title{Calculate highest peak read (Adapted from the addMaxNonPeakSignal function)}
+\title{Takes a data frame and a comparison and returns the highest read using GetMaxread}
 \usage{
 MaxPeakBigWig(df, i.comp, core = 1)
 }
 \arguments{
+\item{df}{data.frame with PyDegradome result}
+
 \item{i.comp}{Name of comparison pair (divided into test and ctrl)}
 
-\item{core}{Number of cores available}
-
-\item{i.df}{data.frame of pyDegradome result}
+\item{core}{Number of threads for the parallel process}
 }
 \description{
-Calculate highest peak read (Adapted from the addMaxNonPeakSignal function)
+Takes a data frame and a comparison and returns the highest read using GetMaxread
 }

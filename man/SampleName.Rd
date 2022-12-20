@@ -2,7 +2,7 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{SampleName}
 \alias{SampleName}
-\title{Gets the first element of the comparison used for the pydegradome analysis}
+\title{Takes the filename of the pydegradome output and returns the first element (first comparison)}
 \usage{
 SampleName(i.comp)
 }
@@ -10,5 +10,5 @@ SampleName(i.comp)
 \item{icomp}{filename based on the comparison between test and control samples}
 }
 \description{
-Gets the first element of the comparison used for the pydegradome analysis
+Takes the filename of the pydegradome output and returns the first element (first comparison)
 }

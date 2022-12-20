@@ -9,7 +9,11 @@ checkPeakRef(df, i.comp, i.cols = cols.indx, idir = pydeg_reads_dir)
 \arguments{
 \item{df}{data.frame of pyDegradome result}
 
-\item{i.comp}{comparison}
+\item{i.comp}{Name of comparison pair (divided into test and ctrl)}
+
+\item{i.cols}{vector of columns to subset the table to append to the reference file}
+
+\item{idir}{path to the directory with the reference file}
 }
 \description{
 Calculate reads for a given region. Checks a reference file to speed up
