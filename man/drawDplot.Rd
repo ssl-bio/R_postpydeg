@@ -48,6 +48,10 @@ drawDplot(
 
 \item{sample_list_plot}{Character vector of sampel names to be plotted. Should be a part of `names(bigwigs)`.}
 
+\item{p_test}{Plot names of test samples}
+
+\item{p_ctrl}{Plot names of control samples}
+
 \item{ylim}{Character vector, "all" or "strand". Both will set the scale of all the panels to be the same; the former will consider both strands while the latter will be strand specific.  Null for autoscale (default).}
 
 \item{p_bigwigs}{List of bigwig records. BigWig files should be loaded by `rtracklayer::import`.}

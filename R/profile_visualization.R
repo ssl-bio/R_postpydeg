@@ -5,7 +5,6 @@
 #' @param x_start Numeric. Coordinate of left end of the plot range.
 #' @param x_end Numeric. Coordinate of right end of the plot range.
 #' @importFrom GenomicRanges GRanges IRanges subsetByOverlaps
-#' @export
 maxCoverageBigWig <- function(bigwig, chr, x_start, x_end) {
   # GRanges for the target region
   gr <- GRanges(
@@ -32,7 +31,6 @@ maxCoverageBigWig <- function(bigwig, chr, x_start, x_end) {
 #' @param chr Char of chromosome name
 #' @param x_start Numeric. Coordinate of left end of the plot range.
 #' @param x_end Numeric. Coordinate of right end of the plot range.
-#' @export
 maxCoverageBigWigList <- function(bigwigs, chr, x_start, x_end) {
     max_min <- lapply(bigwigs, maxCoverageBigWig, chr = chr,
                       x_start = x_start, x_end = x_end)
@@ -68,7 +66,6 @@ mergeVector <- function(ivec,sep1 = " vs ", sep2 = " AND \n",
 #' Invert values and order of elements of a numeric vector while keeping names
 #' @name invertVector
 #' @param x A numeric vector with names
-#' @export
 invertVector <- function(x) {
   inames <- names(x)
   x <- x[rev(seq_along(x))] * -1
@@ -79,7 +76,6 @@ invertVector <- function(x) {
 #' Invert the score values of a list of a GenomicRange object
 #' @name invertGRscores
 #' @param bwl A list of GenomicRange-objects with a score metadata
-#' @export
 invertGRscores <- function(bwl) {
   for (i in seq_along(bwl)) {
     ibw <- bwl[[i]]
@@ -95,7 +91,6 @@ invertGRscores <- function(bwl) {
 #' @param i_factor proportion of the transcript range that will be added as offset
 #' @param p_width width of the plot in basepairs
 #' @name GetPlotCoors
-#' @export
 GetPlotCoors <- function(i_start, i_end, i_factor = NULL, p_width = NULL) {
   if (i_start < i_end) {
     p_start <- i_start
@@ -126,7 +121,6 @@ GetPlotCoors <- function(i_start, i_end, i_factor = NULL, p_width = NULL) {
 #' @param i_factor proportion of the transcript range that will be added as offset
 #' @param p_width width of the plot in basepairs
 #' @name GetPlotMarks
-#' @export
 GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks,
                          txPlot =  FALSE, min_ticks = 4, max_ticks = 6) {
 
@@ -182,8 +176,8 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks,
 #' @param peak_end Numeric vector.Coordinate(s) of right end of the region to be highlighted. If NULL, nothing to be highlinghted (default).
 #' @param tx_ID Gene identification ID, such as ensembl
 #' @param sample_list_plot Character vector of sampel names to be plotted. Should be a part of `names(bigwigs)`.
-#' @param p_test
-#' @param p_ctrl
+#' @param p_test Plot names of test samples
+#' @param p_ctrl Plot names of control samples
 #' @param ylim Character vector, "all" or "strand". Both will set the scale of all the panels to be the same; the former will consider both strands while the latter will be strand specific.  Null for autoscale (default).
 #' @param p_bigwigs List of bigwig records. BigWig files should be loaded by `rtracklayer::import`.
 #' @param p_mart a biomart object from which to retrieve the gene information
@@ -199,9 +193,9 @@ GetPlotMarks <- function(i_start, i_end, p_start, p_end, iticks,
 #' @param p_base_col A vector o color values (hex) for the bases. Values have to have a base-name associated and it should take into account whether is RNA or DNA
 #' @param ref_genome_seq A DNAStringSet object with all chromosomes for the species under study
 #' @param ref_genome A string representing the genome on which the track's ranges are defined (e.g. "TAIR10")
-#' @export
 #' @importFrom Gviz BiomartGeneRegionTrack DataTrack displayPars GenomeAxisTrack
 #' @importFrom Gviz HighlightTrack OverlayTrack plotTracks RNASequenceTrack
+#' @export
 drawDplot <- function(p_chr, tx_start, tx_end, peak_start = NULL,
                       peak_end = NULL, tx_ID = NULL, sample_list_plot,
                       p_test = NULL, p_ctrl = NULL, p_strand = NULL,

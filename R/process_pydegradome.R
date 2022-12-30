@@ -4,7 +4,6 @@
 #' @param df data.frame to match against a reference
 #' @param i.reads reference dataframe
 #' @param ref_col Column with values to merge
-#' @export
 MatchDFwithRef <- function(df, i.reads, ref_col) {
     ilog <- df$indx %in% i.reads$indx
     df_match <- df[ilog, ]
@@ -54,7 +53,7 @@ MergeDFs <- function(dfA, dfB, ref_col) {
 SampleName <- function(i.comp) {
     sample_name <- gsubfn::strapplyc(i.comp, "t_(.*)_c_.*")[[1]]
     if (!sample_name %in% names(dg_bigwig_all)) {
-        sample_name <- lowerCaseSampleName(sample_name)
+        sample_name <- tolower(sample_name)
     }
     return(sample_name)
 }
@@ -68,7 +67,6 @@ SampleName <- function(i.comp) {
 #' @importFrom doParallel makeCluster registerDoParallel stopCluster
 #' @importFrom foreach foreach
 #' @importFrom GenomicRanges subsetByOverlaps
-#' @export
 GetMaxRead <- function(grA, f_bigwig, grB = NULL, core = 1) {
     cl <- makeCluster(as.numeric(core))
     registerDoParallel(cl)
@@ -107,15 +105,14 @@ GetMaxRead <- function(grA, f_bigwig, grB = NULL, core = 1) {
 #' @param core Number of threads for the parallel process
 #' @param i.comp Name of comparison pair (divided into test and ctrl)
 #' @importFrom GenomicRanges GRanges IRanges
-#' @export
 MaxPeakBigWig <- function(df, i.comp, core = 1) {
-                                        #GRanges for the target region
+    ## GRanges for the target region
     gr <- GRanges(
         seqnames = df$chr,
         ranges = IRanges(start = df$peak_start, end = df$peak_stop),
         strand = df$strand
     )
-                                        # Import bigwig data based on i.comp variable
+    ## Import bigwig data based on i.comp variable
     sample_name <- gsubfn::strapplyc(i.comp, "t_(.*)_c_.*")[[1]]
     if (!sample_name %in% names(dg_bigwig_all)) {
         sample_name <- lowerCaseSampleName(sample_name)
@@ -129,7 +126,6 @@ MaxPeakBigWig <- function(df, i.comp, core = 1) {
 #' Returns a list of coordinates for non peak regions.
 #' @name GetNonPeakCoors
 #' @param df A dataframe with peak and gene coordinates
-#' @export
 GetNonPeakCoors <- function(df) {
     ##Sort by peak_start
     df <- df[order(df$peak_start), ]
@@ -178,7 +174,6 @@ GetNonPeakCoors <- function(df) {
 #' @param i.comp Name of comparison pair (divided into test and ctrl)
 #' @param core Number of threads for the parallel process
 #' @importFrom GenomicRanges GRanges IRanges subsetByOverlaps
-#' @export
 addMaxNonPeakSignal <- function(i.df, i.comp, core = 1) {
 
                                         # Separate record by with and without gene ID
@@ -278,6 +273,8 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx,
                                              sep = ""))
             i.reads <- rbind(i.reads, i.reads2)
             i.reads <- unique(i.reads)
+            i.reads <- i.reads[with(i.reads, order(indx)), ]
+            
             tryCatch({
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
@@ -321,8 +318,10 @@ checkNonPeakRefOne <- function(df, i.comp, cols.indx,
                           indx <- paste(ID, chr,strand,
                                         peak_start, peak_stop,
                                         sep = ""))
+        i.reads <- i.reads[with(i.reads, order(indx)), ]
+        
         tryCatch({
-            fwrite(i.reads,peaks_ref,sep = "\t", row.names=FALSE)
+            fwrite(i.reads, peaks_ref, sep = "\t", row.names=FALSE)
             cat(paste0("\t\t\tWrote ",  basename(peaks_ref), "\n"))
         }, error = function(e) {
             stopCluster(cl)
@@ -417,10 +416,12 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core = env$cores) {
                                              sep = ""))
             i.reads <- rbind(i.reads, i.reads2)
             i.reads <- unique(i.reads)
+            i.reads <- i.reads[with(i.reads, order(indx)), ]
+            
             tryCatch({
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
-                fwrite(i.reads,peaks_ref, sep = "\t", row.names = FALSE)
+                fwrite(i.reads, peaks_ref, sep = "\t", row.names = FALSE)
                 cat(paste0("\t\t\tWrote ",  basename(peaks_ref), "\n"))
             }, error = function(e) {
                 message("Writing peaks failed")
@@ -478,8 +479,10 @@ addMaxNonPeakRegion <- function(df, bigwig, i.comp, core = env$cores) {
                                         non_peak_start,
                                         non_peak_stop,
                                         sep = ""))
+        i.reads <- i.reads[with(i.reads, order(indx)), ]
+        
         tryCatch({
-            fwrite(i.reads,peaks_ref,sep = "\t", row.names = FALSE)
+            fwrite(i.reads, peaks_ref,sep = "\t", row.names = FALSE)
             cat(paste0("\t\t\tWrote ", basename(peaks_ref), "\n"))
         }, error = function(e) {
             message("Writing peaks failed")
@@ -579,10 +582,13 @@ checkPeakRef <- function(df, i.comp, i.cols = cols.indx,
                                              sep = ""))
             i.reads <- rbind(i.reads,i.reads2)
             unique(i.reads)
+            i.reads <- i.reads[with(i.reads, order(indx)), ]
+            
             tryCatch({
                                         #remove indx column
                 df.ID2 <- dplyr::select(df.ID2,-indx)
-                fwrite(i.reads,peaks_ref,sep = "\t", row.names=FALSE)
+                
+                fwrite(i.reads, peaks_ref,sep = "\t", row.names=FALSE)
                 cat(paste0("\t\t\tWrote ", basename(peaks_ref), "\n"))
             }, error = function(e) {
                 stopCluster(cl)
@@ -623,8 +629,10 @@ checkPeakRef <- function(df, i.comp, i.cols = cols.indx,
                                         strand, peak_start,
                                         peak_stop,
                                         sep = ""))
+        i.reads <- i.reads[with(i.reads, order(indx)), ]
+        
         tryCatch({
-            fwrite(i.reads,peaks_ref, sep = "\t", row.names = FALSE)
+            fwrite(i.reads, peaks_ref, sep = "\t", row.names = FALSE)
             cat(paste0("\t\t\tWrote ", basename(peaks_ref), "\n"))
         }, error = function(e) {
             stopCluster(cl)
