@@ -717,8 +717,9 @@ maxPtest <- function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core = 1) {
                 f_reads2 <- df2
                 f_reads <- rbind(f_reads, f_reads2)
                 f_reads <- unique(f_reads)
-                df2 <- dplyr::select(df2, -indx)
+                f_reads<- f_reads[with(f_reads, order(indx)), ]
                 fwrite(f_reads,reads_ref,sep = "\t", row.names = FALSE)
+                df2 <- dplyr::select(df2, -indx)
                 cat(paste0("\t\t\tWrote ", basename(reads_ref), "\n"))
             } else {
                 df2 <- NULL
@@ -749,7 +750,8 @@ maxPtest <- function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core = 1) {
             f_reads <- dplyr::select(f_df,
                                      all_of(c(f_cols,"max_peak", "indx")))
             f_reads <- unique(f_reads)
-
+            f_reads<- f_reads[with(f_reads, order(indx)), ]
+            
             fwrite(f_reads,reads_ref,sep = "\t", row.names=FALSE)
             cat(paste0("\t\t\tWrote ", basename(reads_ref), "\n"))
 
@@ -763,88 +765,96 @@ maxPtest <- function(f_df, f_bigwigs, f_pairs, f_input_dir, f_core = 1) {
     return(max.peak.l)
 }
 
-#'Get the mean value of the highest signal found in each of the replicates in control samples
+#'Get the mean value of the highest signal found outside the peak region from both of the replicates in control samples
 #' @name maxTxctrl
-#' @param tx_id Vector with transcripts from which the reads should be obtained
+#' @param f_df data frame with pydegradome processed output
 #' @param f_bigwigs bigwigs List of bigwig records. BigWig files should be loaded by `rtracklayer::import
 #' @param f_pairs pairs of genotype B concentration to be compared
-#' @param f_gr_tr subset of the GRanges object tx_range using pydeg_tx
 #' @param f_input_dir directory of the pooled file
-#' @param f_core Number of threads for the nested function (GetMaxread)
+#' @param f_gr_tr Transcript GRanges object
+#' @param f_core Number of threads for the nested funtion (GetMaxread)
 #' @export
-maxTxctrl <- function(tx_id, f_bigwigs, f_pairs,
-                      f_gr_tr, f_input_dir, f_core = 1) {
-    i.list <- list()
+maxTxctrl <- function(f_df, f_pairs, f_bigwigs, f_input_dir, f_core = 1) {
+    setDF(f_df)
+    f_cols <- colnames(f_df)[-length(colnames(f_df))]
+    list_maxTx_ctrl <- list()
     for (i in seq_along(f_pairs)) {
+
         f_sample <- f_pairs[i]
         f_bigwig <- f_bigwigs[[f_sample]]
-
-                                        #create max read df
-        pydeg_df <- data.frame(tx_name = tx_id, #1
-                               indx = paste0(tx_id, f_sample))
 
         reads_ref <- file.path(f_input_dir,
                                paste0("Max_reads_tx-",
                                       f_sample))
-
-
         if (file.exists(reads_ref)) {
-
             cat("\tUsing reference file...\n")
-            f_reads <- read.table(reads_ref, header = TRUE, sep = "\t")
+            f_reads <- read.table(reads_ref, header = TRUE,  sep = "\t")
+            dfs.ID <- MatchDFwithRef(f_df, f_reads, "max_read_tx")
+            df1 <- dfs.ID$df_match
+            df2 <- dfs.ID$df_nonmatch
 
-            ##logical vector of indices in ref file
-            i.wread <- pydeg_df$indx %in% f_reads$indx
-
-            dfs.ID <- MatchDFwithRef(pydeg_df, f_reads, "max_read_tx")
-            pydeg_df1 <- dfs.ID$df_match
-            pydeg_df2 <- dfs.ID$df_nonmatch
-
-            cat("\t\tAdd max_read_tx to missing entries...\n")
-            if (!is.null(pydeg_df2) && nrow(pydeg_df2) > 0) {
-                f_gr  <-  f_gr_tr[!i.wread, ]
-                pydeg_df2$max_read_tx <- GetMaxRead(grA = f_gr,
-                                                    f_bigwig = f_bigwig,
-                                                    core = f_core)
-
-                cat("\t\tFinished max_read_tx calculation on control sample\n")
-                f_reads2 <- pydeg_df2
+            cat("\t\tAdd peak signal to missing entries...\n")
+            if (!is.null(df2) && nrow(df2) > 0) {
+                f_gr <- GRanges(seqnames = df2$chr,
+                                ranges = IRanges(start = df2$gene_region_start,
+                                                 end = df2$gene_region_end),
+                                strand = df2$strand)
+                df2$max_read_tx <- GetMaxRead(grA = f_gr,
+                                              f_bigwig = f_bigwig,
+                                              core = f_core)
+                       
+                cat("\t\tFinished peak signal calculation on test sample\n")
+                f_reads2 <- dplyr::select(df2,
+                                          all_of(c(f_cols, "max_read_tx", "indx")))
                 f_reads <- rbind(f_reads, f_reads2)
                 f_reads <- unique(f_reads)
-                pydeg_df2 <- dplyr::select(pydeg_df2, -indx)
+                f_reads<- f_reads[with(f_reads, order(indx)), ]
                 fwrite(f_reads,reads_ref,sep = "\t", row.names = FALSE)
+                
+                df2 <- dplyr::select(df2, -indx)
                 cat(paste0("\t\t\tWrote ", basename(reads_ref), "\n"))
             } else {
-                pydeg_df2 <- NULL
+                df2 <- NULL
             }
             cat("\t\tMerging dataframes...\n")
 
-            pydeg_df <- rbind(pydeg_df1, pydeg_df2)
-            pydeg_df$sample <- f_sample
-            i.list[[f_sample]] <- unique(pydeg_df)
+            df.out <- rbind(df1, df2)
+            df.out$sample <- f_sample
+            df.out <- dplyr::select(df.out,
+                                    all_of(c("tx_name",
+                                             "max_read_tx",
+                                             "sample")))
+            list_maxTx_ctrl[[f_sample]] <- unique(df.out)
 
         } else {
             cat("\tNo reference was found.\n")
-            cat("\t\tCalculating max_read_tx on control sample...\n")
-            f_gr <- f_gr_tr
-            pydeg_df$max_read_tx <- GetMaxRead(grA = f_gr,
-                                               f_bigwig = f_bigwig,
-                                               core = env$cores)
-
-            cat("\t\tFinished max_read_tx calculation on control sample\n")
-            f_reads <- pydeg_df
+            cat("\t\tCalculating peak signal on test sample...\n")
+            f_gr <- GRanges(seqnames = f_df$chr,
+                            ranges = IRanges(start = f_df$gene_region_start,
+                                             end = f_df$gene_region_end),
+                            strand = f_df$strand)
+            f_df$max_read_tx <- GetMaxRead(grA = f_gr,
+                                          f_bigwig = f_bigwig,
+                                          core = f_core)
+            cat("\t\tFinished peak signal calculation on test sample\n")
+            f_reads <- dplyr::select(f_df,
+                                     all_of(c(f_cols, "max_read_tx", "indx")))
             f_reads <- unique(f_reads)
-
-            fwrite(f_reads,reads_ref, sep = "\t", row.names = FALSE)
+            f_reads<- f_reads[with(f_reads, order(indx)), ]
+            
+            fwrite(f_reads, reads_ref, sep = "\t", row.names=FALSE)
             cat(paste0("\t\t\tWrote ", basename(reads_ref), "\n"))
 
-            pydeg_df <- dplyr::select(pydeg_df,-indx)
-            pydeg_df$sample <- f_sample
-            i.list[[f_sample]] <- unique(pydeg_df)
-        }#Test if there is reference file
+            df.out <- dplyr::select(f_df,-indx)
+            df.out$sample <- f_sample
+            df.out <- dplyr::select(df.out,
+                                    all_of(c("tx_name",
+                                             "max_read_tx",
+                                             "sample")))
+            list_maxTx_ctrl[[f_sample]] <- unique(df.out)
+        }
         cat("Finished calculating signals along the transcript for control sample: ",
             f_sample, "\n")
-
-    }#for i (loop over replicates)
-    return(i.list)
+    }
+    return(list_maxTx_ctrl)
 }

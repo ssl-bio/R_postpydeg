@@ -2,23 +2,23 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{maxTxctrl}
 \alias{maxTxctrl}
-\title{Get the mean value of the highest signal found in each of the replicates in control samples}
+\title{Get the mean value of the highest signal found outside the peak region from both of the replicates in control samples}
 \usage{
-maxTxctrl(tx_id, f_bigwigs, f_pairs, f_gr_tr, f_input_dir, f_core = 1)
+maxTxctrl(f_df, f_pairs, f_bigwigs, f_input_dir, f_core = 1)
 }
 \arguments{
-\item{tx_id}{Vector with transcripts from which the reads should be obtained}
-
-\item{f_bigwigs}{bigwigs List of bigwig records. BigWig files should be loaded by `rtracklayer::import}
+\item{f_df}{data frame with pydegradome processed output}
 
 \item{f_pairs}{pairs of genotype B concentration to be compared}
 
-\item{f_gr_tr}{subset of the GRanges object tx_range using pydeg_tx}
+\item{f_bigwigs}{bigwigs List of bigwig records. BigWig files should be loaded by `rtracklayer::import}
 
 \item{f_input_dir}{directory of the pooled file}
 
-\item{f_core}{Number of threads for the nested function (GetMaxread)}
+\item{f_core}{Number of threads for the nested funtion (GetMaxread)}
+
+\item{f_gr_tr}{Transcript GRanges object}
 }
 \description{
-Get the mean value of the highest signal found in each of the replicates in control samples
+Get the mean value of the highest signal found outside the peak region from both of the replicates in control samples
 }
