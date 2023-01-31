@@ -2,8 +2,7 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{MatchDFwithRef}
 \alias{MatchDFwithRef}
-\title{Merges a dataframe (df) with a particular column (ref_col) reference based on the index 'indx' column
-Returns a list of dataframes one matched with the reference an another with nonmatches}
+\title{Merges a column (ref_col) from a reference dataframe (i.reads) into an input dataframe (df). An 'indx' is used for merging. The input is divided into matching and non-matching dataframes and returned as a list.}
 \usage{
 MatchDFwithRef(df, i.reads, ref_col)
 }
@@ -15,6 +14,5 @@ MatchDFwithRef(df, i.reads, ref_col)
 \item{ref_col}{Column with values to merge}
 }
 \description{
-Merges a dataframe (df) with a particular column (ref_col) reference based on the index 'indx' column
-Returns a list of dataframes one matched with the reference an another with nonmatches
+Merges a column (ref_col) from a reference dataframe (i.reads) into an input dataframe (df). An 'indx' is used for merging. The input is divided into matching and non-matching dataframes and returned as a list.
 }

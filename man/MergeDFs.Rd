@@ -2,7 +2,7 @@
 % Please edit documentation in R/process_pydegradome.R
 \name{MergeDFs}
 \alias{MergeDFs}
-\title{Merges two data frames by an indx column composed by tx_name, chr and strand}
+\title{Merges a column (ref_col) from dataframe B (dfB) into dataframe A (dfA) keeping all entries from the latter. Returns a dataframe}
 \usage{
 MergeDFs(dfA, dfB, ref_col)
 }
@@ -14,5 +14,5 @@ MergeDFs(dfA, dfB, ref_col)
 \item{ref_col}{Column name (string) to merge}
 }
 \description{
-Merges two data frames by an indx column composed by tx_name, chr and strand
+Merges a column (ref_col) from dataframe B (dfB) into dataframe A (dfA) keeping all entries from the latter. Returns a dataframe
 }
